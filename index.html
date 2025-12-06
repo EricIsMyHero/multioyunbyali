@@ -3,26 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <title>Multi Oyun Saytı</title>
-<style>
-#targetNumber { font-size: 32px; margin-top: -20px; margin-bottom: 15px; }
 
+<style>
 :root {
   --bg: #f2f2f2;
   --btn-bg: #333;
   --btn-color: #fff;
   --btn-radius: 8px;
 }
+
 html, body {
   height: 100%;
   margin: 0;
 }
+
 body {
   background: var(--bg);
-  font-family: Inter, Arial, sans-serif;
+  font-family: Arial, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 #menu {
   width: 320px;
   display: flex;
@@ -30,6 +32,7 @@ body {
   gap: 14px;
   align-items: stretch;
 }
+
 button {
   padding: 16px 20px;
   font-size: 18px;
@@ -41,34 +44,58 @@ button {
   transform-origin: center;
   transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
+
 button:hover, button:focus {
   transform: scale(1.06);
-  background-color: #d32f2f; /* red on hover */
+  background-color: #d32f2f;
   box-shadow: 0 8px 20px rgba(0,0,0,0.12);
   outline: none;
 }
-button:active {
-  transform: scale(0.99);
+
+#targetNumber {
+  font-size: 32px;
+  margin-top: -20px;
+  margin-bottom: 15px;
 }
-#scoreBoard { position: fixed; top: 10px; right: 10px; background: #fff; padding: 12px; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.15); font-size: 14px; min-width: 120px; display:none; }
+
+#scoreBoard {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #fff;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+  font-size: 14px;
+  min-width: 120px;
+  display: none;
+}
 </style>
 </head>
+
 <body>
+
 <div id="scoreBoard"></div>
+
 <div id="menu">
   <button id="gamesBtn">Oyunlar</button>
   <button id="settingsBtn">Ayarlar</button>
   <button id="creditsBtn">Credits</button>
 </div>
+
 <div id="games" style="display:none; width:320px; margin:0 auto; text-align:center;">
   <button id="startGame1">Rəqəmi Düz Tap</button>
 </div>
 
 <div id="game1" style="display:none; width:320px; margin:0 auto; text-align:center; font-size:20px;">
+
   <div id="targetNumber"></div>
   <div id="countdown"></div>
-  <div id="liveTimer" style="margin-top:20px;"></div>
+
+  <div id="liveTimer" style="margin-top:20px; font-size:26px;"></div>
+
   <button id="stopBtn" style="margin-top:20px; display:none;">Dayandır</button>
+
   <div id="result" style="margin-top:20px; font-weight:bold;"></div>
 </div>
 
@@ -110,14 +137,14 @@ function startLiveTimer(target) {
   const live = document.getElementById("liveTimer");
   const stopBtn = document.getElementById("stopBtn");
   const result = document.getElementById("result");
+  const scoreBoard = document.getElementById("scoreBoard");
 
   stopBtn.style.display = "inline-block";
-  const finalScore = Math.round(score);
-scoreBoard.style.display = "block";
-updateScoreHistory(finalScore);
-result.textContent = "";
+  result.textContent = "";
 
   let t = 0;
+  live.textContent = "0.0";
+
   const interval = setInterval(() => {
     t += 0.1;
     live.textContent = t.toFixed(1);
@@ -125,22 +152,31 @@ result.textContent = "";
 
   stopBtn.onclick = () => {
     clearInterval(interval);
+
     const diff = Math.abs(target - t);
     let score = 1000 - diff * 500;
     if (score < 0) score = 0;
 
-    result.textContent = "Xal: " + Math.round(score);
+    const finalScore = Math.round(score);
+
+    scoreBoard.style.display = "block";
+    updateScoreHistory(finalScore);
+
+    result.textContent = "Xal: " + finalScore;
     stopBtn.style.display = "none";
   };
 }
+
 function updateScoreHistory(newScore) {
   let list = JSON.parse(localStorage.getItem("scores") || "[]");
   list.unshift(newScore);
   list = list.slice(0, 5);
   localStorage.setItem("scores", JSON.stringify(list));
+
   const box = document.getElementById("scoreBoard");
   box.innerHTML = "Son 5 xal:<br>" + list.join("<br>");
 }
 </script>
+
 </body>
 </html>
