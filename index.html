@@ -105,76 +105,89 @@ const games = document.getElementById("games");
 const game1 = document.getElementById("game1");
 
 document.getElementById("gamesBtn").onclick = () => {
-  menu.style.display = "none";
-  games.style.display = "flex";
-  games.style.flexDirection = "column";
-  games.style.gap = "14px";
+    menu.style.display = "none";
+    games.style.display = "flex";
+    games.style.flexDirection = "column";
+    games.style.gap = "14px";
 };
 
+// Bu funksiya həm ilkin başlama, həm də yenidən başlama üçün istifadə olunur
+function initializeGame() {
+    const target = +(Math.random() * (20 - 3) + 3).toFixed(1);
+    document.getElementById("targetNumber").textContent = "Hədəf: " + target + " saniyə";
+
+    let pre = 3;
+    const countdown = document.getElementById("countdown");
+    countdown.textContent = "Başlayır: " + pre;
+    document.getElementById("stopBtn").textContent = "Dayandır"; // Düymə mətnini sıfırla
+    document.getElementById("result").textContent = ""; // Nəticəni sıfırla
+
+    const preInt = setInterval(() => {
+        pre--;
+        countdown.textContent = "Başlayır: " + pre;
+        if (pre <= 0) {
+            clearInterval(preInt);
+            countdown.textContent = ""; // <-- İndi 'Başladı' yazısı silinir
+            startLiveTimer(target);
+        }
+    }, 1000);
+}
+
 document.getElementById("startGame1").onclick = () => {
-  games.style.display = "none";
-  game1.style.display = "block";
-
-  const target = +(Math.random() * (20 - 3) + 3).toFixed(1);
-  document.getElementById("targetNumber").textContent = "Hədəf: " + target + " saniyə";
-
-  let pre = 3;
-  const countdown = document.getElementById("countdown");
-  countdown.textContent = "Başlayır: " + pre;
-
-  const preInt = setInterval(() => {
-    pre--;
-    countdown.textContent = "Başlayır: " + pre;
-    if (pre <= 0) {
-      clearInterval(preInt);
-      countdown.textContent = "Başladı";
-      startLiveTimer(target);
-    }
-  }, 1000);
+    games.style.display = "none";
+    game1.style.display = "block";
+    initializeGame(); // Oyunu başlat
 };
 
 function startLiveTimer(target) {
-  const live = document.getElementById("liveTimer");
-  const stopBtn = document.getElementById("stopBtn");
-  const result = document.getElementById("result");
-  const scoreBoard = document.getElementById("scoreBoard");
+    const live = document.getElementById("liveTimer");
+    const stopBtn = document.getElementById("stopBtn");
+    const result = document.getElementById("result");
+    const scoreBoard = document.getElementById("scoreBoard");
 
-  stopBtn.style.display = "inline-block";
-  result.textContent = "";
+    stopBtn.style.display = "inline-block";
+    result.textContent = "";
 
-  let t = 0;
-  live.textContent = "0.0";
+    let t = 0;
+    live.textContent = "0.0";
 
-  const interval = setInterval(() => {
-    t += 0.1;
-    live.textContent = t.toFixed(1);
-  }, 100);
+    const interval = setInterval(() => {
+        t += 0.1;
+        live.textContent = t.toFixed(1);
+    }, 100);
 
-  stopBtn.onclick = () => {
-    clearInterval(interval);
+    stopBtn.onclick = () => {
+        clearInterval(interval);
 
-    const diff = Math.abs(target - t);
-    let score = 1000 - diff * 500;
-    if (score < 0) score = 0;
+        const diff = Math.abs(target - t);
+        let score = 1000 - diff * 500;
+        if (score < 0) score = 0;
 
-    const finalScore = Math.round(score);
+        const finalScore = Math.round(score);
 
-    scoreBoard.style.display = "block";
-    updateScoreHistory(finalScore);
+        scoreBoard.style.display = "block";
+        updateScoreHistory(finalScore);
 
-    result.textContent = "Xal: " + finalScore;
-    stopBtn.style.display = "none";
-  };
+        result.textContent = "Xal: " + finalScore;
+        
+        // 1. Düyməni 'Yenidən Başla' olaraq dəyişdir
+        stopBtn.textContent = "Yenidən Başla"; 
+        
+        // 2. Düyməyə yeni funksiya təyin et
+        stopBtn.onclick = () => {
+            initializeGame();
+        };
+    };
 }
 
 function updateScoreHistory(newScore) {
-  let list = JSON.parse(localStorage.getItem("scores") || "[]");
-  list.unshift(newScore);
-  list = list.slice(0, 5);
-  localStorage.setItem("scores", JSON.stringify(list));
+    let list = JSON.parse(localStorage.getItem("scores") || "[]");
+    list.unshift(newScore);
+    list = list.slice(0, 5);
+    localStorage.setItem("scores", JSON.stringify(list));
 
-  const box = document.getElementById("scoreBoard");
-  box.innerHTML = "Son 5 xal:<br>" + list.join("<br>");
+    const box = document.getElementById("scoreBoard");
+    box.innerHTML = "Son 5 xal:<br>" + list.join("<br>");
 }
 </script>
 
