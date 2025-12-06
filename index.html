@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Multi Oyun Saytı</title>
 <style>
+#targetNumber { font-size: 32px; margin-top: -20px; margin-bottom: 15px; }
+
 :root {
   --bg: #f2f2f2;
   --btn-bg: #333;
@@ -48,9 +50,11 @@ button:hover, button:focus {
 button:active {
   transform: scale(0.99);
 }
+#scoreBoard { position: fixed; top: 10px; right: 10px; background: #fff; padding: 12px; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.15); font-size: 14px; min-width: 120px; display:none; }
 </style>
 </head>
 <body>
+<div id="scoreBoard"></div>
 <div id="menu">
   <button id="gamesBtn">Oyunlar</button>
   <button id="settingsBtn">Ayarlar</button>
@@ -108,7 +112,9 @@ function startLiveTimer(target) {
   const result = document.getElementById("result");
 
   stopBtn.style.display = "inline-block";
-  result.textContent = "";
+  scoreBoard.style.display = "block";
+updateScoreHistory(Math.round(score));
+result.textContent = "";
 
   let t = 0;
   const interval = setInterval(() => {
@@ -125,6 +131,14 @@ function startLiveTimer(target) {
     result.textContent = "Xal: " + Math.round(score);
     stopBtn.style.display = "none";
   };
+}
+function updateScoreHistory(newScore) {
+  let list = JSON.parse(localStorage.getItem("scores") || "[]");
+  list.unshift(newScore);
+  list = list.slice(0, 5);
+  localStorage.setItem("scores", JSON.stringify(list));
+  const box = document.getElementById("scoreBoard");
+  box.innerHTML = "Son 5 xal:<br>" + list.join("<br>");
 }
 </script>
 </body>
