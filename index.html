@@ -56,5 +56,76 @@ button:active {
   <button id="settingsBtn">Ayarlar</button>
   <button id="creditsBtn">Credits</button>
 </div>
+<div id="games" style="display:none; width:320px; margin:0 auto; text-align:center;">
+  <button id="startGame1">Rəqəmi Düz Tap</button>
+</div>
+
+<div id="game1" style="display:none; width:320px; margin:0 auto; text-align:center; font-size:20px;">
+  <div id="targetNumber"></div>
+  <div id="countdown"></div>
+  <div id="liveTimer" style="margin-top:20px;"></div>
+  <button id="stopBtn" style="margin-top:20px; display:none;">Dayandır</button>
+  <div id="result" style="margin-top:20px; font-weight:bold;"></div>
+</div>
+
+<script>
+const menu = document.getElementById("menu");
+const games = document.getElementById("games");
+const game1 = document.getElementById("game1");
+
+document.getElementById("gamesBtn").onclick = () => {
+  menu.style.display = "none";
+  games.style.display = "flex";
+  games.style.flexDirection = "column";
+  games.style.gap = "14px";
+};
+
+document.getElementById("startGame1").onclick = () => {
+  games.style.display = "none";
+  game1.style.display = "block";
+
+  const target = +(Math.random() * (20 - 3) + 3).toFixed(1);
+  document.getElementById("targetNumber").textContent = "Hədəf: " + target + " saniyə";
+
+  let pre = 3;
+  const countdown = document.getElementById("countdown");
+  countdown.textContent = "Başlayır: " + pre;
+
+  const preInt = setInterval(() => {
+    pre--;
+    countdown.textContent = "Başlayır: " + pre;
+    if (pre <= 0) {
+      clearInterval(preInt);
+      countdown.textContent = "Başladı";
+      startLiveTimer(target);
+    }
+  }, 1000);
+};
+
+function startLiveTimer(target) {
+  const live = document.getElementById("liveTimer");
+  const stopBtn = document.getElementById("stopBtn");
+  const result = document.getElementById("result");
+
+  stopBtn.style.display = "inline-block";
+  result.textContent = "";
+
+  let t = 0;
+  const interval = setInterval(() => {
+    t += 0.1;
+    live.textContent = t.toFixed(1);
+  }, 100);
+
+  stopBtn.onclick = () => {
+    clearInterval(interval);
+    const diff = Math.abs(target - t);
+    let score = 1000 - diff * 500;
+    if (score < 0) score = 0;
+
+    result.textContent = "Xal: " + Math.round(score);
+    stopBtn.style.display = "none";
+  };
+}
+</script>
 </body>
 </html>
