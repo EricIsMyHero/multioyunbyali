@@ -112,8 +112,9 @@ function startLiveTimer(target) {
   const result = document.getElementById("result");
 
   stopBtn.style.display = "inline-block";
-  scoreBoard.style.display = "block";
-updateScoreHistory(Math.round(score));
+  const finalScore = Math.round(score);
+scoreBoard.style.display = "block";
+updateScoreHistory(finalScore);
 result.textContent = "";
 
   let t = 0;
