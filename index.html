@@ -2,145 +2,353 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi Oyun Saytı</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-#targetNumber { font-size: 32px; margin-top: -20px; margin-bottom: 15px; }
-
+/* Custom styles to integrate with Tailwind and enhance aesthetics */
 :root {
-  --bg: #f2f2f2;
-  --btn-bg: #333;
-  --btn-color: #fff;
-  --btn-radius: 8px;
+  --bg: #f2f2f2;
+  --btn-bg: #4a5568; /* Tailwind gray-700 */
+  --btn-hover: #2d3748; /* Tailwind gray-800 */
+  --primary-color: #d32f2f; /* Dark Red/Primary accent */
 }
 html, body {
-  height: 100%;
-  margin: 0;
+  height: 100%;
+  margin: 0;
 }
 body {
-  background: var(--bg);
-  font-family: Inter, Arial, sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-#menu {
-  width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: stretch;
+#menu, #games, #game1 {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 button {
-  padding: 16px 20px;
-  font-size: 18px;
-  border: none;
-  border-radius: var(--btn-radius);
-  background: var(--btn-bg);
-  color: var(--btn-color);
-  cursor: pointer;
-  transform-origin: center;
-  transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  padding: 14px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--btn-bg);
+  color: white;
+  cursor: pointer;
+  transition: all 180ms ease;
+  font-weight: 600;
 }
-button:hover, button:focus {
-  transform: scale(1.06);
-  background-color: #d32f2f; /* red on hover */
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  outline: none;
+button:hover {
+  background-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(211, 47, 47, 0.4);
 }
-button:active {
-  transform: scale(0.99);
+#targetNumber {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--btn-bg);
 }
-#scoreBoard { position: fixed; top: 10px; right: 10px; background: #fff; padding: 12px; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.15); font-size: 14px; min-width: 120px; display:none; }
+#liveTimer {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--primary-color);
+  margin: 20px 0;
+}
+#countdown {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #007bff; /* Blue for visibility */
+}
+#result {
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+#scoreBoard { 
+  position: fixed; 
+  top: 15px; 
+  right: 15px; 
+  background: #ffffff; 
+  padding: 15px; 
+  border-radius: 8px; 
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+  font-size: 14px; 
+  min-width: 150px; 
+  text-align: left;
+  z-index: 10;
+}
+#scoreBoard h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+}
+#scoreList div {
+    padding: 3px 0;
+    border-bottom: 1px dashed #eee;
+}
+#scoreList div:last-child {
+    border-bottom: none;
+}
 </style>
 </head>
 <body>
-<div id="scoreBoard"></div>
-<div id="menu">
-  <button id="gamesBtn">Oyunlar</button>
-  <button id="settingsBtn">Ayarlar</button>
-  <button id="creditsBtn">Credits</button>
-</div>
-<div id="games" style="display:none; width:320px; margin:0 auto; text-align:center;">
-  <button id="startGame1">Rəqəmi Düz Tap</button>
+<div id="scoreBoard">
+    <h3>Son 5 Xal</h3>
+    <div id="scoreList"></div>
 </div>
 
-<div id="game1" style="display:none; width:320px; margin:0 auto; text-align:center; font-size:20px;">
-  <div id="targetNumber"></div>
-  <div id="countdown"></div>
-  <div id="liveTimer" style="margin-top:20px;"></div>
-  <button id="stopBtn" style="margin-top:20px; display:none;">Dayandır</button>
-  <div id="result" style="margin-top:20px; font-weight:bold;"></div>
+<div id="menu">
+  <button id="gamesBtn">Oyunlar</button>
+  <button id="settingsBtn">Ayarlar</button>
+  <button id="creditsBtn">Credits</button>
+</div>
+<div id="games" style="display:none;">
+  <button id="startGame1">Rəqəmi Düz Tap</button>
+</div>
+
+<div id="game1" style="display:none;">
+  <div id="targetNumber"></div>
+  <div id="countdown"></div>
+  <div id="liveTimer">0.0</div>
+  <button id="stopBtn" class="bg-red-500 hover:bg-red-600" style="display:none;">Dayandır</button>
+  <div id="result"></div>
+  <!-- Yenidən Başla düyməsi əlavə edildi -->
+  <button id="restartBtn" style="display:none; margin-top:14px;">Yenidən Başla</button>
 </div>
 
 <script>
+// Firebase və Auth dəyişənləri (Canvas mühiti üçün əlavə edildi)
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+// Gerekli Firebase modulları və SDK yüklənməsi
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, query, limit, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+let app, db, auth;
+let userId = 'anon'; // Başlanğıc dəyər
+
+// UI elementləri
 const menu = document.getElementById("menu");
 const games = document.getElementById("games");
 const game1 = document.getElementById("game1");
+const restartBtn = document.getElementById("restartBtn");
+const scoreBoard = document.getElementById("scoreBoard");
+const scoreList = document.getElementById("scoreList");
+
+
+// Firebase Başlanğıcı və Auth
+async function initializeFirebase() {
+    if (firebaseConfig) {
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            // İstifadəçinin avtomatik daxil olması
+            if (typeof __initial_auth_token !== 'undefined') {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+            
+            userId = auth.currentUser ? auth.currentUser.uid : crypto.randomUUID();
+            console.log("Firebase uğurla başlatıldı. İstifadəçi ID:", userId);
+            
+            // Scoreboard üçün real-time dinləyici
+            setupScoreListener();
+
+        } catch (error) {
+            console.error("Firebase başlatılarkən səhv:", error);
+        }
+    } else {
+        console.warn("Firebase config tapılmadı. Xallar lokal saxlanılacaq.");
+        loadLocalScoreHistory();
+    }
+}
+
+// Xalları Firestore-da saxlamaq
+async function saveScore(score) {
+    if (!db || !userId) return;
+    try {
+        const scoreRef = doc(collection(db, `artifacts/${appId}/public/data/scores`));
+        await setDoc(scoreRef, {
+            userId: userId,
+            score: score,
+            timestamp: serverTimestamp()
+        });
+    } catch (e) {
+        console.error("Xal yadda saxlanılarkən səhv oldu:", e);
+    }
+}
+
+// Xal cədvəlini real-time yeniləmək (Firestore)
+function setupScoreListener() {
+    if (!db) return;
+    const scoresColRef = collection(db, `artifacts/${appId}/public/data/scores`);
+    // Son 5 ən yaxşı xalı çəkmək üçün
+    const q = query(scoresColRef, orderBy("score", "desc"), orderBy("timestamp", "desc"), limit(5));
+
+    onSnapshot(q, (snapshot) => {
+        let scores = [];
+        snapshot.forEach((doc) => {
+            scores.push(doc.data().score);
+        });
+        updateScoreHistoryUI(scores);
+    }, (error) => {
+        console.error("Xal dinləyicisində səhv:", error);
+        // Firebase səhv verərsə, lokal yaddaşı göstər
+        loadLocalScoreHistory();
+    });
+}
+
+// Xal cədvəlini lokal yaddaşdan yükləmək (Firestore olmayan vəziyyətlər üçün)
+function loadLocalScoreHistory() {
+    let list = JSON.parse(localStorage.getItem("scores") || "[]");
+    updateScoreHistoryUI(list);
+}
+
+// Xal cədvəlinin UI-nı yeniləmək
+function updateScoreHistoryUI(list) {
+    scoreList.innerHTML = '';
+    if (list.length === 0) {
+      scoreList.innerHTML = '<div class="text-gray-500">Hələ oyun yoxdur.</div>';
+    } else {
+      list.forEach((score, index) => {
+        scoreList.innerHTML += `
+            <div class="flex justify-between">
+                <span>#${index + 1}</span>
+                <span class="font-bold text-gray-800">${Math.round(score)}</span>
+            </div>
+        `;
+      });
+    }
+}
+
+
+// Oyun Başlanğıcı
 
 document.getElementById("gamesBtn").onclick = () => {
-  menu.style.display = "none";
-  games.style.display = "flex";
-  games.style.flexDirection = "column";
-  games.style.gap = "14px";
+  menu.style.display = "none";
+  games.style.display = "flex";
 };
 
 document.getElementById("startGame1").onclick = () => {
-  games.style.display = "none";
-  game1.style.display = "block";
+    restartBtn.style.display = "none"; // Əvvəlki oyundan qalmışsa gizlət
+    games.style.display = "none";
+    game1.style.display = "flex"; // Flex kimi dəyişildi ki, elementlər dikey düzülsün
 
-  const target = +(Math.random() * (20 - 3) + 3).toFixed(1);
-  document.getElementById("targetNumber").textContent = "Hədəf: " + target + " saniyə";
+    const target = +(Math.random() * (20 - 3) + 3).toFixed(1);
+    document.getElementById("targetNumber").textContent = "Hədəf: " + target + " saniyə";
 
-  let pre = 3;
-  const countdown = document.getElementById("countdown");
-  countdown.textContent = "Başlayır: " + pre;
+    let pre = 3;
+    const countdown = document.getElementById("countdown");
+    const liveTimer = document.getElementById("liveTimer");
+    const result = document.getElementById("result");
+    const stopBtn = document.getElementById("stopBtn");
+    
+    // UI-ı təmizlə
+    liveTimer.textContent = "0.0";
+    result.textContent = "";
+    stopBtn.style.display = "none"; // Countdown başlayana qədər gizlət
 
-  const preInt = setInterval(() => {
-    pre--;
-    countdown.textContent = "Başlayır: " + pre;
-    if (pre <= 0) {
-      clearInterval(preInt);
-      countdown.textContent = "Başladı";
-      startLiveTimer(target);
-    }
-  }, 1000);
+    // Sayğacın görünməsi
+    countdown.style.display = "block";
+    countdown.textContent = "Başlayır: " + pre;
+
+    const preInt = setInterval(() => {
+      pre--;
+      countdown.textContent = "Başlayır: " + pre;
+      if (pre <= 0) {
+        clearInterval(preInt);
+        countdown.textContent = "Başladı! İndi Dayandırın.";
+        // Oyun başlayır
+        startLiveTimer(target);
+      }
+    }, 1000);
 };
 
 function startLiveTimer(target) {
-  const live = document.getElementById("liveTimer");
-  const stopBtn = document.getElementById("stopBtn");
-  const result = document.getElementById("result");
+    const liveTimer = document.getElementById("liveTimer");
+    const countdown = document.getElementById("countdown");
+    const stopBtn = document.getElementById("stopBtn");
+    const result = document.getElementById("result");
 
-  stopBtn.style.display = "inline-block";
-  const finalScore = Math.round(score);
-scoreBoard.style.display = "block";
-updateScoreHistory(finalScore);
-result.textContent = "";
+    countdown.style.display = "none"; // Countdown bitdi, gizlət
+    stopBtn.style.display = "inline-block";
+    result.textContent = ""; // Əmin olmaq üçün yenidən təmizlə
 
-  let t = 0;
-  const interval = setInterval(() => {
-    t += 0.1;
-    live.textContent = t.toFixed(1);
-  }, 100);
+    let t = 0;
+    const interval = setInterval(() => {
+      t += 0.1;
+      liveTimer.textContent = t.toFixed(1);
+    }, 100);
 
-  stopBtn.onclick = () => {
-    clearInterval(interval);
-    const diff = Math.abs(target - t);
-    let score = 1000 - diff * 500;
-    if (score < 0) score = 0;
+    stopBtn.onclick = async () => {
+      clearInterval(interval);
+      
+      // Fərqi hesablayın
+      const diff = Math.abs(target - t);
+      let score = Math.max(0, 1000 - diff * 500); // 1000 xal, hər 1 saniyə fərq üçün 500 xal itirilir
 
-    result.textContent = "Xal: " + Math.round(score);
-    stopBtn.style.display = "none";
-  };
+      const finalScore = Math.round(score);
+
+      result.innerHTML = `Vaxtınız: <span class="text-red-500">${t.toFixed(1)} saniyə</span>.<br>
+                            Fərq: <span class="text-blue-500">${diff.toFixed(2)} saniyə</span>.<br>
+                            Xal: <span class="text-green-500 font-extrabold">${finalScore}</span>.`;
+      
+        // Xalları yadda saxla
+        if (db) {
+            await saveScore(finalScore);
+        } else {
+            // Firebase yoxdursa, lokal yaddaşdan istifadə et
+            let list = JSON.parse(localStorage.getItem("scores") || "[]");
+            list.unshift(finalScore);
+            list = list.slice(0, 5);
+            localStorage.setItem("scores", JSON.stringify(list));
+            updateScoreHistoryUI(list); // Lokal cədvəli yenilə
+        }
+
+      stopBtn.style.display = "none";
+      // Yenidən başla düyməsini göstər
+      restartBtn.style.display = "inline-block";
+  };
 }
-function updateScoreHistory(newScore) {
-  let list = JSON.parse(localStorage.getItem("scores") || "[]");
-  list.unshift(newScore);
-  list = list.slice(0, 5);
-  localStorage.setItem("scores", JSON.stringify(list));
-  const box = document.getElementById("scoreBoard");
-  box.innerHTML = "Son 5 xal:<br>" + list.join("<br>");
-}
+
+// Yenidən Başla funksiyası
+restartBtn.onclick = () => {
+    // UI təmizlənməsi və yeni oyunu başlatma
+    document.getElementById("liveTimer").textContent = "0.0";
+    document.getElementById("result").textContent = "";
+    restartBtn.style.display = "none";
+    document.getElementById("targetNumber").textContent = "";
+    document.getElementById("countdown").style.display = "block";
+    document.getElementById("countdown").textContent = "Hazırlanır...";
+
+    // `startGame1` funksiyası bütün zəruri addımları (countdown və timer) təkrarlayacaq
+    document.getElementById("startGame1").click(); 
+};
+
+
+// Səhifə yükləndikdə Firebase'i başlat və lokal xalları yüklə
+window.onload = function() {
+    initializeFirebase();
+};
+
 </script>
 </body>
 </html>
