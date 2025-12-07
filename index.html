@@ -28,6 +28,18 @@ body {
   gap: 14px;
   align-items: stretch;
 }
+  #settings {
+  display:none;
+  width:320px;
+  margin:0 auto;
+  text-align:center;
+}
+#settings label {
+  font-size:18px;
+}
+#settings input[type="range"] {
+  width:100%;
+}
 button {
   padding: 16px 20px;
   font-size: 18px;
@@ -77,6 +89,9 @@ button:active {
 </style>
 </head>
 <body>
+  
+  <audio id="tickSound" src="https://assets.mixkit.co/sfx/download/mixkit-clock-tick-709.wav"></audio>
+
 <div id="scoreBoard"></div>
 <div id="finalScoreDisplay"></div>
 <div id="menu">
@@ -84,6 +99,13 @@ button:active {
   <button id="settingsBtn">Ayarlar</button>
   <button id="creditsBtn">Credits</button>
 </div>
+  
+  <div id="settings">
+  <label>Saat səsi:</label>
+  <input type="range" id="volumeControl" min="0" max="1" step="0.1">
+  <button id="settingsBack">Geri</button>
+</div>
+  
 <div id="games" style="display:none; width:320px; margin:0 auto; text-align:center;">
   <button id="startGame1">Rəqəmi Düz Tap</button>
 </div>
@@ -110,11 +132,33 @@ let currentInterval = null;
 const menu = document.getElementById("menu");
 const games = document.getElementById("games");
 const difficultyMenu = document.getElementById("difficultyMenu");
+const settings = document.getElementById("settings");
 const game1 = document.getElementById("game1");
 const scoreBoard = document.getElementById("scoreBoard");
 const finalScoreDisplay = document.getElementById("finalScoreDisplay");
 const restartBtn = document.getElementById("restartBtn");
+const tickSound = document.getElementById("tickSound");
 
+
+  const savedVolume = localStorage.getItem("volume") || 0.5;
+tickSound.volume = savedVolume;
+document.getElementById("volumeControl").value = savedVolume;
+
+document.getElementById("volumeControl").oninput = function() {
+  tickSound.volume = this.value;
+  localStorage.setItem("volume", this.value);
+};
+
+document.getElementById("settingsBtn").onclick = () => {
+  menu.style.display = "none";
+  settings.style.display = "block";
+};
+
+document.getElementById("settingsBack").onclick = () => {
+  settings.style.display = "none";
+  menu.style.display = "flex";
+};
+  
 function clearGameDisplay() {
   document.getElementById("countdown").textContent = "";
   document.getElementById("liveTimer").textContent = "";
