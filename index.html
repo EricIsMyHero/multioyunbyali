@@ -4,74 +4,66 @@
 <meta charset="UTF-8">
 <title>Multi Oyun Saytı</title>
 <style>
-:root {
-  --bg: #f2f2f2;
-  --btn-bg: #333;
-  --btn-color: #fff;
-  --btn-radius: 8px;
 }
-html, body {
-  height: 100%;
-  margin: 0;
-}
-body {
-  background: var(--bg);
-  font-family: Inter, Arial, sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-#menu {
-  width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: stretch;
-}
-button {
-  padding: 16px 20px;
-  font-size: 18px;
-  border: none;
-  border-radius: var(--btn-radius);
-  background: var(--btn-bg);
-  color: var(--btn-color);
-  cursor: pointer;
-  transition: transform 180ms ease;
-}
-button:hover {
-  transform: scale(1.06);
-  background-color: #d32f2f;
-}
+#menu { display:flex; }
 #settings {
-  display:none;
-  width:320px;
-  margin:0 auto;
-  text-align:center;
+display:none;
+width:320px;
+margin:0 auto;
+text-align:center;
 }
 #settings label {
-  font-size:18px;
+font-size:18px;
 }
 #settings input[type="range"] {
-  width:100%;
+width:100%;
+}
+button {
+padding: 16px 20px;
+font-size: 18px;
+border: none;
+border-radius: var(--btn-radius);
+background: var(--btn-bg);
+color: var(--btn-color);
+cursor: pointer;
+transition: transform 180ms ease, background-color 180ms ease;
+}
+button:hover {
+transform: scale(1.06);
+background-color: var(--danger);
+}
+#targetNumber {
+font-size: 32px;
+margin-top: -20px;
+margin-bottom: 15px;
 }
 #scoreBoard {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background: #fff;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  display:none;
+position: fixed;
+top: 10px;
+right: 10px;
+background: #fff;
+padding: 12px;
+border-radius: 6px;
+font-size: 14px;
+min-width: 120px;
+display: none;
 }
 #finalScoreDisplay {
-  position: fixed;
-  top: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 28px;
-  font-weight: bold;
-  display:none;
+position: fixed;
+top: 50px;
+left: 50%;
+transform: translateX(-50%);
+font-size: 28px;
+font-weight: bold;
+display: none;
+}
+/* Geri düyməsinin stilini dəyişdiririk */
+#backToGamesBtn {
+    background-color: #555;
+}
+#backToGamesBtn:hover {
+    background-color: #777;
+    transform: scale(1.06);
 }
 </style>
 </head>
@@ -83,27 +75,30 @@ button:hover {
 <div id="finalScoreDisplay"></div>
 
 <div id="menu">
-  <button id="gamesBtn">Oyunlar</button>
-  <button id="settingsBtn">Ayarlar</button>
-  <button id="creditsBtn">Credits</button>
+  <button id="gamesBtn">Oyunlar</button>
+  <button id="settingsBtn">Ayarlar</button>
+  <button id="creditsBtn">Credits</button>
 </div>
 
 <div id="settings">
-  <label>Saat səsi:</label>
-  <input type="range" id="volumeControl" min="0" max="1" step="0.1">
-  <button id="settingsBack">Geri</button>
+  <label>Saat səsi:</label>
+  <input type="range" id="volumeControl" min="0" max="1" step="0.1">
+  <button id="settingsBack">Geri</button>
 </div>
 
-<div id="games" style="display:none; width:320px; margin:0 auto; text-align:center;">
-  <button id="startGame1">Rəqəmi Düz Tap</button>
+<div id="games">
+  <!-- Kontent JS ilə yüklənir -->
 </div>
 
-<div id="game1" style="display:none; width:320px; margin:0 auto; text-align:center; font-size:20px;">
-  <div id="targetNumber"></div>
-  <div id="countdown"></div>
-  <div id="liveTimer" style="margin-top:20px; font-size:26px;"></div>
-  <button id="stopBtn" style="margin-top:20px; display:none;">Dayandır</button>
-  <button id="restartBtn" style="margin-top:10px; display:none;">Yenidən Başla</button>
+<!-- Game 1 interface -->
+<div id="game1">
+  <div id="targetNumber"></div>
+  <div id="countdown"></div>
+  <div id="liveTimer" style="margin-top:20px; font-size:26px;"></div>
+  <button id="stopBtn" style="display:none;">Dayandır</button>
+  <button id="restartBtn" style="display:none;">Yenidən Başla</button>
+  <!-- Yeni Geri düyməsi əlavə edildi -->
+  <button id="backToGamesBtn" style="display:none;">Geri</button>
 </div>
 
 <script>
@@ -114,123 +109,191 @@ const game1 = document.getElementById("game1");
 const finalScoreDisplay = document.getElementById("finalScoreDisplay");
 const scoreBoard = document.getElementById("scoreBoard");
 const restartBtn = document.getElementById("restartBtn");
+const backToGamesBtn = document.getElementById("backToGamesBtn"); // Yeni Geri düyməsi
 const tickSound = document.getElementById("tickSound");
 
 let difficulty = null;
 let intervalId = null;
+let countdownId = null; 
 
 const savedVolume = localStorage.getItem("volume") || 0.5;
 tickSound.volume = savedVolume;
 document.getElementById("volumeControl").value = savedVolume;
 
+// --- Utility Functions ---
+
+function hideAllScreens() {
+    menu.style.display = "none";
+    games.style.display = "none";
+    settings.style.display = "none";
+    game1.style.display = "none";
+    finalScoreDisplay.style.display = "none";
+}
+
+function resetGame1UI() {
+    // Vaxt sayğaclarını sıfırla
+    if (intervalId) clearInterval(intervalId);
+    if (countdownId) clearInterval(countdownId);
+    intervalId = null;
+    countdownId = null;
+
+    // Oyun elementlərini gizlət
+    document.getElementById("stopBtn").style.display = "none";
+    restartBtn.style.display = "none";
+    backToGamesBtn.style.display = "none";
+    document.getElementById("liveTimer").textContent = "";
+}
+
+function showGameSelection() {
+    hideAllScreens();
+    resetGame1UI(); 
+    
+    games.innerHTML = `
+        <button id="startGame1">Rəqəmi Düz Tap</button>
+        <button id="gamesToMenuBtn">Geri</button>
+    `;
+    games.style.display = "flex";
+    
+    document.getElementById("startGame1").onclick = () => showDifficultyMenu();
+    document.getElementById("gamesToMenuBtn").onclick = () => {
+        hideAllScreens();
+        menu.style.display = "flex";
+    };
+}
+
+
+// --- Event Handlers (Updated) ---
+
 document.getElementById("volumeControl").oninput = function() {
-  tickSound.volume = this.value;
-  localStorage.setItem("volume", this.value);
+  tickSound.volume = this.value;
+  localStorage.setItem("volume", this.value);
 };
 
 document.getElementById("settingsBtn").onclick = () => {
-  menu.style.display = "none";
-  settings.style.display = "block";
+    hideAllScreens();
+    settings.style.display = "flex";
 };
 
 document.getElementById("settingsBack").onclick = () => {
-  settings.style.display = "none";
-  menu.style.display = "flex";
+    hideAllScreens();
+    menu.style.display = "flex";
 };
 
 document.getElementById("gamesBtn").onclick = () => {
-  menu.style.display = "none";
-  games.style.display = "flex";
+    hideAllScreens();
+    showGameSelection(); // Oyun seçimini göstər
 };
 
-document.getElementById("startGame1").onclick = () => {
-  games.style.display = "none";
-  showDifficultyMenu();
-};
 
 function showDifficultyMenu() {
-  games.innerHTML = `
-    <button id="easyBtn">Asan</button>
-    <button id="mediumBtn">Orta</button>
-    <button id="hardBtn">Çətin</button>
-  `;
+  games.innerHTML = `
+    <button id="easyBtn">Asan</button>
+    <button id="mediumBtn">Orta</button>
+    <button id="hardBtn">Çətin</button>
+    <button id="gamesBackBtn">Geri</button> <!-- Geri düyməsi əlavə olundu -->
+  `;
 
-  games.style.display = "flex";
+  games.style.display = "flex";
 
-  document.getElementById("easyBtn").onclick = () => startGame("easy");
-  document.getElementById("mediumBtn").onclick = () => startGame("medium");
-  document.getElementById("hardBtn").onclick = () => startGame("hard");
+  document.getElementById("easyBtn").onclick = () => startGame("easy");
+  document.getElementById("mediumBtn").onclick = () => startGame("medium");
+  document.getElementById("hardBtn").onclick = () => startGame("hard");
+  document.getElementById("gamesBackBtn").onclick = () => {
+        // Çətinlikdən Oyunlar menyusuna qayıtmaq
+        hideAllScreens();
+        showGameSelection();
+    };
 }
 
 function startGame(level) {
-  difficulty = level;
-  games.style.display = "none";
-  game1.style.display = "block";
+  difficulty = level;
+  hideAllScreens();
+  game1.style.display = "flex"; 
+    
+  finalScoreDisplay.style.display = "none";
+  document.getElementById("liveTimer").textContent = "";
 
-  finalScoreDisplay.style.display = "none";
-  document.getElementById("liveTimer").textContent = "";
+  const target = +(Math.random() * 17 + 3).toFixed(1);
+  document.getElementById("targetNumber").textContent = "Hədəf " + target;
 
-  const target = +(Math.random() * 17 + 3).toFixed(1);
-  document.getElementById("targetNumber").textContent = "Hədəf " + target;
-
-  let c = 3;
-  const countdown = document.getElementById("countdown");
-  countdown.textContent = c;
-
-  const cd = setInterval(() => {
-    c--;
-    countdown.textContent = c > 0 ? c : "";
-    if (c <= 0) {
-      clearInterval(cd);
-      runTimer(target);
-    }
-  }, 1000);
+  let c = 3;
+  const countdown = document.getElementById("countdown");
+  countdown.textContent = c;
+    
+  backToGamesBtn.style.display = "inline-block"; // Oyuna girəndə Geri düyməsini göstər
+    
+  countdownId = setInterval(() => {
+    c--;
+    countdown.textContent = c > 0 ? c : "";
+    if (c <= 0) {
+      clearInterval(countdownId);
+      countdownId = null;
+      runTimer(target);
+    }
+  }, 1000);
 }
 
 function runTimer(target) {
-  const live = document.getElementById("liveTimer");
-  live.style.display = "block";
+  const live = document.getElementById("liveTimer");
+  live.style.display = "block";
 
-  let t = 0;
-  let speed = 100;
+  let t = 0;
+  let speed = 100;
 
-  if (difficulty === "medium") speed = 66;
-  if (difficulty === "hard") speed = 100;
+  if (difficulty === "medium") speed = 66;
+  if (difficulty === "hard") speed = 100;
 
-  intervalId = setInterval(() => {
-    t += 0.1;
-    live.textContent = t.toFixed(1);
+  intervalId = setInterval(() => {
+    t += 0.1;
+    live.textContent = t.toFixed(1);
 
-    tickSound.currentTime = 0;
-    tickSound.play();
+    tickSound.currentTime = 0;
+    tickSound.play();
 
-    if (difficulty === "hard" && t >= 3) {
-      live.style.display = "none";
-    }
-  }, speed);
+    if (difficulty === "hard" && t >= 3) {
+      document.getElementById("stopBtn").click(); 
+    }
+  }, speed);
 
-  document.getElementById("stopBtn").style.display = "inline-block";
+  document.getElementById("stopBtn").style.display = "inline-block";
 
-  document.getElementById("stopBtn").onclick = () => {
-    clearInterval(intervalId);
+  document.getElementById("stopBtn").onclick = () => {
+    clearInterval(intervalId);
+    intervalId = null;
 
-    const diff = Math.abs(target - t);
-    let score = Math.max(0, 1000 - diff * 500);
-    const final = Math.round(score);
+    const diff = Math.abs(target - t);
+    let score = Math.max(0, 1000 - diff * 500);
+    const final = Math.round(score);
 
-    finalScoreDisplay.style.display = "block";
-    finalScoreDisplay.textContent = "Xal " + final;
+    finalScoreDisplay.style.display = "block";
+    finalScoreDisplay.textContent = "Xal " + final;
 
-    document.getElementById("stopBtn").style.display = "none";
-    restartBtn.style.display = "inline-block";
-  };
+    document.getElementById("stopBtn").style.display = "none";
+    restartBtn.style.display = "inline-block";
+    backToGamesBtn.style.display = "inline-block"; // Oyun bitdikdə Geri düyməsini göstər
+  };
 }
 
 restartBtn.onclick = () => {
-  game1.style.display = "none";
-  finalScoreDisplay.style.display = "none";
-  showDifficultyMenu();
+  // Sadəcə çətinlik menyusuna qayıt
+  resetGame1UI();
+  showDifficultyMenu();
 };
+
+// Yeni əlavə edilmiş Geri düyməsi funksiyası
+backToGamesBtn.onclick = () => {
+    // Oyundan oyun seçimi (Rəqəmi Düz Tap) menyusuna qayıt
+    resetGame1UI();
+    showGameSelection(); 
+};
+
+// Səhifə yüklənəndə ilkin vəziyyəti qurmaq
+window.onload = () => {
+    // İlkin olaraq yalnız menyu görünsün
+    hideAllScreens();
+    menu.style.display = "flex"; 
+};
+
 </script>
 
 </body>
