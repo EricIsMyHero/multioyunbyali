@@ -21,14 +21,28 @@ body {
   align-items: center;
   justify-content: center;
 }
-#menu, #difficultyMenu {
+#menu {
   width: 320px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   align-items: stretch;
 }
-  #settings {
+button {
+  padding: 16px 20px;
+  font-size: 18px;
+  border: none;
+  border-radius: var(--btn-radius);
+  background: var(--btn-bg);
+  color: var(--btn-color);
+  cursor: pointer;
+  transition: transform 180ms ease;
+}
+button:hover {
+  transform: scale(1.06);
+  background-color: #d32f2f;
+}
+#settings {
   display:none;
   width:320px;
   margin:0 auto;
@@ -40,31 +54,6 @@ body {
 #settings input[type="range"] {
   width:100%;
 }
-button {
-  padding: 16px 20px;
-  font-size: 18px;
-  border: none;
-  border-radius: var(--btn-radius);
-  background: var(--btn-bg);
-  color: var(--btn-color);
-  cursor: pointer;
-  transform-origin: center;
-  transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
-}
-button:hover, button:focus {
-  transform: scale(1.06);
-  background-color: #d32f2f;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  outline: none;
-}
-button:active {
-  transform: scale(0.99);
-}
-#targetNumber {
-  font-size: 32px;
-  margin-top: -20px;
-  margin-bottom: 15px;
-}
 #scoreBoard {
   position: fixed;
   top: 10px;
@@ -72,10 +61,8 @@ button:active {
   background: #fff;
   padding: 12px;
   border-radius: 6px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.15);
   font-size: 14px;
-  min-width: 120px;
-  display: none;
+  display:none;
 }
 #finalScoreDisplay {
   position: fixed;
@@ -84,36 +71,31 @@ button:active {
   transform: translateX(-50%);
   font-size: 28px;
   font-weight: bold;
-  display: none;
+  display:none;
 }
 </style>
 </head>
 <body>
-  
-  <audio id="tickSound" src="https://assets.mixkit.co/sfx/download/mixkit-clock-tick-709.wav"></audio>
+
+<audio id="tickSound" src="https://assets.mixkit.co/sfx/download/mixkit-clock-tick-709.wav"></audio>
 
 <div id="scoreBoard"></div>
 <div id="finalScoreDisplay"></div>
+
 <div id="menu">
   <button id="gamesBtn">Oyunlar</button>
   <button id="settingsBtn">Ayarlar</button>
   <button id="creditsBtn">Credits</button>
 </div>
-  
-  <div id="settings">
+
+<div id="settings">
   <label>Saat səsi:</label>
   <input type="range" id="volumeControl" min="0" max="1" step="0.1">
   <button id="settingsBack">Geri</button>
 </div>
-  
+
 <div id="games" style="display:none; width:320px; margin:0 auto; text-align:center;">
   <button id="startGame1">Rəqəmi Düz Tap</button>
-</div>
-
-<div id="difficultyMenu" style="display:none;">
-  <button data-diff="easy">Asan</button>
-  <button data-diff="medium">Orta</button>
-  <button data-diff="hard">Çətin</button>
 </div>
 
 <div id="game1" style="display:none; width:320px; margin:0 auto; text-align:center; font-size:20px;">
@@ -122,25 +104,22 @@ button:active {
   <div id="liveTimer" style="margin-top:20px; font-size:26px;"></div>
   <button id="stopBtn" style="margin-top:20px; display:none;">Dayandır</button>
   <button id="restartBtn" style="margin-top:10px; display:none;">Yenidən Başla</button>
-  <div id="result" style="margin-top:20px; font-weight:bold;"></div>
 </div>
 
 <script>
-let difficulty = "easy";
-let currentInterval = null;
-
 const menu = document.getElementById("menu");
 const games = document.getElementById("games");
-const difficultyMenu = document.getElementById("difficultyMenu");
 const settings = document.getElementById("settings");
 const game1 = document.getElementById("game1");
-const scoreBoard = document.getElementById("scoreBoard");
 const finalScoreDisplay = document.getElementById("finalScoreDisplay");
+const scoreBoard = document.getElementById("scoreBoard");
 const restartBtn = document.getElementById("restartBtn");
 const tickSound = document.getElementById("tickSound");
 
+let difficulty = null;
+let intervalId = null;
 
-  const savedVolume = localStorage.getItem("volume") || 0.5;
+const savedVolume = localStorage.getItem("volume") || 0.5;
 tickSound.volume = savedVolume;
 document.getElementById("volumeControl").value = savedVolume;
 
@@ -158,132 +137,101 @@ document.getElementById("settingsBack").onclick = () => {
   settings.style.display = "none";
   menu.style.display = "flex";
 };
-  
-function clearGameDisplay() {
-  document.getElementById("countdown").textContent = "";
-  document.getElementById("liveTimer").textContent = "";
-  document.getElementById("result").textContent = "";
-  finalScoreDisplay.style.display = "none";
-  document.getElementById("stopBtn").style.display = "none";
-  restartBtn.style.display = "none";
-  if (currentInterval) {
-    clearInterval(currentInterval);
-    currentInterval = null;
-  }
-}
 
-function updateScoreHistory(newScore) {
-  let list = JSON.parse(localStorage.getItem("scores") || "[]");
-  list.unshift(newScore);
-  list = list.slice(0, 5);
-  localStorage.setItem("scores", JSON.stringify(list));
-  scoreBoard.style.display = "block";
-  scoreBoard.innerHTML = "Son 5 xal:<br>" + list.join("<br>");
-}
-
-function startLiveTimer(target) {
-  const live = document.getElementById("liveTimer");
-  const stopBtn = document.getElementById("stopBtn");
-  const result = document.getElementById("result");
-
-  stopBtn.style.display = "inline-block";
-  restartBtn.style.display = "none";
-  result.textContent = "";
-  finalScoreDisplay.style.display = "none";
-  live.textContent = "";
-
-  let t = 0;
-  let speed = difficulty === "medium" ? 0.15 : 0.1;
-  // for hard mode hide after 3 seconds => 3000ms / 100ms ticks = 30 ticks
-  let hideAfterTicks = difficulty === "hard" ? 30 : null;
-  let ticks = 0;
-
-  currentInterval = setInterval(() => {
-    t += speed;
-    ticks++;
-    live.textContent = t.toFixed(1);
-
-    if (difficulty === "hard" && ticks >= hideAfterTicks) {
-      live.style.visibility = "hidden";
-    }
-  }, 100);
-
-  stopBtn.onclick = () => {
-    if (currentInterval) {
-      clearInterval(currentInterval);
-      currentInterval = null;
-    }
-    live.style.visibility = "visible";
-
-    const diff = Math.abs(target - t);
-    let score = 1000 - diff * 500;
-    if (score < 0) score = 0;
-    const finalScore = Math.round(score);
-
-    const green = Math.min(finalScore / 1000, 1);
-    const red = 1 - green;
-    finalScoreDisplay.textContent = "Xal: " + finalScore;
-    finalScoreDisplay.style.color = `rgb(${Math.round(red*255)},${Math.round(green*255)},0)`;
-    finalScoreDisplay.style.display = "block";
-
-    stopBtn.style.display = "none";
-    restartBtn.style.display = "inline-block";
-    updateScoreHistory(finalScore);
-  };
-}
-
-// menu handlers
 document.getElementById("gamesBtn").onclick = () => {
-  clearGameDisplay();
   menu.style.display = "none";
   games.style.display = "flex";
-  games.style.flexDirection = "column";
-  games.style.gap = "14px";
 };
 
-// start button shows difficulty menu
 document.getElementById("startGame1").onclick = () => {
-  clearGameDisplay();
   games.style.display = "none";
-  difficultyMenu.style.display = "flex";
-  difficultyMenu.style.flexDirection = "column";
-  difficultyMenu.style.gap = "14px";
+  showDifficultyMenu();
 };
 
-// difficulty selection
-document.querySelectorAll("#difficultyMenu button").forEach(btn => {
-  btn.onclick = () => {
-    difficulty = btn.dataset.diff;
-    difficultyMenu.style.display = "none";
-    clearGameDisplay();
-    game1.style.display = "block";
+function showDifficultyMenu() {
+  games.innerHTML = `
+    <button id="easyBtn">Asan</button>
+    <button id="mediumBtn">Orta</button>
+    <button id="hardBtn">Çətin</button>
+  `;
 
-    const target = +(Math.random() * (20 - 3) + 3).toFixed(1);
-    document.getElementById("targetNumber").textContent = "Hədəf: " + target + " saniyə";
+  games.style.display = "flex";
 
-    let pre = 3;
-    const countdown = document.getElementById("countdown");
-    countdown.textContent = "Başlayır: " + pre;
+  document.getElementById("easyBtn").onclick = () => startGame("easy");
+  document.getElementById("mediumBtn").onclick = () => startGame("medium");
+  document.getElementById("hardBtn").onclick = () => startGame("hard");
+}
 
-    const preInt = setInterval(() => {
-      pre--;
-      countdown.textContent = pre > 0 ? "Başlayır: " + pre : "";
-      if (pre <= 0) {
-        clearInterval(preInt);
-        startLiveTimer(target);
-      }
-    }, 1000);
+function startGame(level) {
+  difficulty = level;
+  games.style.display = "none";
+  game1.style.display = "block";
+
+  finalScoreDisplay.style.display = "none";
+  document.getElementById("liveTimer").textContent = "";
+
+  const target = +(Math.random() * 17 + 3).toFixed(1);
+  document.getElementById("targetNumber").textContent = "Hədəf " + target;
+
+  let c = 3;
+  const countdown = document.getElementById("countdown");
+  countdown.textContent = c;
+
+  const cd = setInterval(() => {
+    c--;
+    countdown.textContent = c > 0 ? c : "";
+    if (c <= 0) {
+      clearInterval(cd);
+      runTimer(target);
+    }
+  }, 1000);
+}
+
+function runTimer(target) {
+  const live = document.getElementById("liveTimer");
+  live.style.display = "block";
+
+  let t = 0;
+  let speed = 100;
+
+  if (difficulty === "medium") speed = 66;
+  if (difficulty === "hard") speed = 100;
+
+  intervalId = setInterval(() => {
+    t += 0.1;
+    live.textContent = t.toFixed(1);
+
+    tickSound.currentTime = 0;
+    tickSound.play();
+
+    if (difficulty === "hard" && t >= 3) {
+      live.style.display = "none";
+    }
+  }, speed);
+
+  document.getElementById("stopBtn").style.display = "inline-block";
+
+  document.getElementById("stopBtn").onclick = () => {
+    clearInterval(intervalId);
+
+    const diff = Math.abs(target - t);
+    let score = Math.max(0, 1000 - diff * 500);
+    const final = Math.round(score);
+
+    finalScoreDisplay.style.display = "block";
+    finalScoreDisplay.textContent = "Xal " + final;
+
+    document.getElementById("stopBtn").style.display = "none";
+    restartBtn.style.display = "inline-block";
   };
-});
+}
 
-// restart returns to difficulty menu and clears displays
 restartBtn.onclick = () => {
-  clearGameDisplay();
   game1.style.display = "none";
-  difficultyMenu.style.display = "flex";
-  difficultyMenu.style.flexDirection = "column";
-  difficultyMenu.style.gap = "14px";
+  finalScoreDisplay.style.display = "none";
+  showDifficultyMenu();
 };
 </script>
+
 </body>
 </html>
