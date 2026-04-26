@@ -1628,11 +1628,15 @@ function getCardImg(card) {
 /* ═══════════════════════════════════════════════════════
    CARDS
 ═══════════════════════════════════════════════════════ */
+const RARITY_FILES = ['mundane','familiar','arcane','relic','ascendant','apex','ethereal'];
+
 async function initCards() {
   if (allCards.length === 0) {
     try {
-      const res = await fetch('data/cards.json');
-      allCards = await res.json();
+      const results = await Promise.all(
+        RARITY_FILES.map(r => fetch(`rarity/${r}.json`).then(res => res.ok ? res.json() : []).catch(() => []))
+      );
+      allCards = results.flat();
     } catch(e) {
       document.getElementById('cards-grid').innerHTML = '<div class="no-results">Could not load card data.</div>';
       return;
