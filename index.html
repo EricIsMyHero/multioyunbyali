@@ -334,32 +334,33 @@ body {
 .stat-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); width: 0; }
 .stat-val-sm { font-family: var(--font-head); font-size: 0.78rem; color: var(--text); text-align: right; font-weight: 600; }
 
-/* ── Secondary stats grid (NEW) ── */
-.secondary-stats-grid {
+/* ── Advanced / Secondary stats — same row style as primary bars ── */
+.secondary-stats-list { margin-top: 4px; }
+.secondary-stat-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-  gap: 8px;
-  margin-top: 4px;
-}
-.secondary-stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 10px 12px;
-  background: rgba(255,255,255,0.025);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  transition: border-color 0.2s ease;
-}
-.secondary-stat-item:hover { border-color: var(--border-glow); }
-.secondary-stat-top {
-  display: flex;
+  grid-template-columns: 96px 1fr 52px;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
-.secondary-stat-icon { font-size: 0.85rem; line-height: 1; }
-.secondary-stat-label { font-family: var(--font-head); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.secondary-stat-val { font-family: var(--font-head); font-size: 0.88rem; color: var(--text); font-weight: 700; }
+.secondary-stat-icon { font-size: 0.8rem; line-height: 1; flex-shrink: 0; }
+/* Neutral dashed track — visually mirrors the primary bar track */
+.secondary-stat-dash {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+/* Subtle fixed-width fill — just enough to show the row has a visual anchor */
+.secondary-stat-dash::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 30%;
+  background: rgba(167,139,250,0.25);
+  border-radius: 2px;
+}
 
 .modal-trait-box {
   background: rgba(100,140,255,0.05); border: 1px solid rgba(100,140,255,0.15); border-left: 3px solid var(--accent);
@@ -451,7 +452,6 @@ body {
   .codex-nav { position: static; flex-direction: row; flex-wrap: wrap; }
   .section-wrap { padding: 60px 20px; }
   #site-nav { padding: 0 20px; }
-  .secondary-stats-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
 }
 </style>
 </head>
@@ -810,7 +810,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 /*
  * PRIMARY STAT BARS — shown with animated progress bars
- * Key names must match your JSON stats object keys exactly.
  */
 const PRIMARY_STAT_DEFS = [
   { key:'health',  label:'HP',      icon:'❤', max:5000, color:'#f87171' },
@@ -823,8 +822,7 @@ const PRIMARY_STAT_DEFS = [
 ];
 
 /*
- * SECONDARY STATS — shown in a tile grid below the bars.
- * Add / remove entries freely to match your JSON keys.
+ * ADVANCED STATS — same row layout as primary bars, neutral track
  */
 const SECONDARY_STAT_DEFS = [
   { key:'attackSpeed',      label:'Attack Speed',     icon:'⏱' },
@@ -867,18 +865,16 @@ function openModal(card) {
         </div>`;
     }).join('');
 
-  /* SECONDARY stat tiles */
+  /* ADVANCED stats — same row layout, neutral dash track */
   const secondaryHTML = SECONDARY_STAT_DEFS
     .filter(s => stats[s.key] !== undefined && stats[s.key] !== '-' && stats[s.key] !== '')
     .map(s => `
-      <div class="secondary-stat-item">
-        <div class="secondary-stat-top">
-          <span class="secondary-stat-icon">${s.icon}</span>
-          <span class="secondary-stat-label">${s.label}</span>
-        </div>
-        <div class="secondary-stat-val">${stats[s.key]}</div>
-      </div>`
-    ).join('');
+      <div class="secondary-stat-row">
+        <div class="stat-label-sm"><span class="secondary-stat-icon">${s.icon}</span> ${s.label}</div>
+        <div class="secondary-stat-dash"></div>
+        <div class="stat-val-sm">${stats[s.key]}</div>
+      </div>`)
+    .join('');
 
   const trait = card.trait || card.note || null;
   const story = card.story && card.story !== '-' ? card.story : null;
@@ -892,7 +888,7 @@ function openModal(card) {
 
     ${secondaryHTML ? `
       <div class="modal-section-label">Advanced Statistics</div>
-      <div class="secondary-stats-grid">${secondaryHTML}</div>` : ''}
+      <div class="secondary-stats-list">${secondaryHTML}</div>` : ''}
 
     ${trait ? `<div class="modal-section-label">Ability</div><div class="modal-trait-box">${trait}</div>` : ''}
     ${story ? `<div class="modal-section-label">Lore</div><div class="modal-story-box">${story}</div>` : ''}
